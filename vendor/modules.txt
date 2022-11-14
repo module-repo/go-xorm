@@ -1,0 +1,30 @@
+# cloud.google.com/go v0.37.4
+cloud.google.com/go/civil
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/denisenkom/go-mssqldb v0.0.0-20190707035753-2be1aa521ff4
+github.com/denisenkom/go-mssqldb
+github.com/denisenkom/go-mssqldb/internal/cp
+# github.com/go-sql-driver/mysql v1.4.1
+github.com/go-sql-driver/mysql
+# github.com/go-xorm/sqlfiddle v0.0.0-20180821085327-62ce714f951a
+github.com/go-xorm/sqlfiddle
+# github.com/lib/pq v1.0.0
+github.com/lib/pq
+github.com/lib/pq/oid
+# github.com/mattn/go-sqlite3 v1.10.0
+github.com/mattn/go-sqlite3
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/testify v1.4.0
+github.com/stretchr/testify/assert
+# github.com/ziutek/mymysql v1.5.4
+github.com/ziutek/mymysql/godrv
+github.com/ziutek/mymysql/mysql
+github.com/ziutek/mymysql/native
+# golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
+golang.org/x/crypto/md4
+# google.golang.org/appengine v1.4.0
+google.golang.org/appengine/cloudsql
+# gopkg.in/yaml.v2 v2.2.2
+gopkg.in/yaml.v2
