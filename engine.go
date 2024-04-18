@@ -352,7 +352,7 @@ func (engine *Engine) Sql(querystring string, args ...interface{}) *Session {
 // SQL method let's you manually write raw SQL and operate
 // For example:
 //
-//         engine.SQL("select * from user").Find(&users)
+//	engine.SQL("select * from user").Find(&users)
 //
 // This    code will execute "select * from user" and set the records to users
 func (engine *Engine) SQL(query interface{}, args ...interface{}) *Session {
@@ -773,9 +773,8 @@ func (engine *Engine) Desc(colNames ...string) *Session {
 // Asc will generate "ORDER BY column1,column2 Asc"
 // This method can chainable use.
 //
-//        engine.Desc("name").Asc("age").Find(&users)
-//        // SELECT * FROM user ORDER BY name DESC, age ASC
-//
+//	engine.Desc("name").Asc("age").Find(&users)
+//	// SELECT * FROM user ORDER BY name DESC, age ASC
 func (engine *Engine) Asc(colNames ...string) *Session {
 	session := engine.NewSession()
 	session.isAutoClose = true
@@ -1225,6 +1224,102 @@ func (engine *Engine) ClearCache(beans ...interface{}) error {
 	return nil
 }
 
+func (engine *Engine) SyncEngine(engineName string, beans ...interface{}) error {
+	session := engine.StoreEngine(engineName)
+	defer session.Close()
+
+	for _, bean := range beans {
+		v := rValue(bean)
+		tableNameNoSchema := engine.TableName(bean)
+		table, err := engine.autoMapType(v)
+		if err != nil {
+			return err
+		}
+
+		isExist, err := session.Table(bean).isTableExist(tableNameNoSchema)
+		if err != nil {
+			return err
+		}
+		if !isExist {
+			err = session.createTable(bean)
+			if err != nil {
+				return err
+			}
+		}
+		/*isEmpty, err := engine.IsEmptyTable(bean)
+		  if err != nil {
+		      return err
+		  }*/
+		var isEmpty bool
+		if isEmpty {
+			err = session.dropTable(bean)
+			if err != nil {
+				return err
+			}
+			err = session.createTable(bean)
+			if err != nil {
+				return err
+			}
+		} else {
+			for _, col := range table.Columns() {
+				isExist, err := engine.dialect.IsColumnExist(tableNameNoSchema, col.Name)
+				if err != nil {
+					return err
+				}
+				if !isExist {
+					if err := session.statement.setRefBean(bean); err != nil {
+						return err
+					}
+					err = session.addColumn(col.Name)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			for name, index := range table.Indexes {
+				if err := session.statement.setRefBean(bean); err != nil {
+					return err
+				}
+				if index.Type == core.UniqueType {
+					isExist, err := session.isIndexExist2(tableNameNoSchema, index.Cols, true)
+					if err != nil {
+						return err
+					}
+					if !isExist {
+						if err := session.statement.setRefBean(bean); err != nil {
+							return err
+						}
+
+						err = session.addUnique(tableNameNoSchema, name)
+						if err != nil {
+							return err
+						}
+					}
+				} else if index.Type == core.IndexType {
+					isExist, err := session.isIndexExist2(tableNameNoSchema, index.Cols, false)
+					if err != nil {
+						return err
+					}
+					if !isExist {
+						if err := session.statement.setRefBean(bean); err != nil {
+							return err
+						}
+
+						err = session.addIndex(tableNameNoSchema, name)
+						if err != nil {
+							return err
+						}
+					}
+				} else {
+					return errors.New("unknow index type")
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // Sync the new struct changes to database, this method will automatically add
 // table, column, index, unique. but will not delete or change anything.
 // If you change some field, you should change the database manually.
@@ -1423,9 +1518,10 @@ func (engine *Engine) InsertOne(bean interface{}) (int64, error) {
 // Update records, bean's non-empty fields are updated contents,
 // condiBean' non-empty filds are conditions
 // CAUTION:
-//        1.bool will defaultly be updated content nor conditions
-//         You should call UseBool if you have bool to use.
-//        2.float32 & float64 may be not inexact as conditions
+//
+//	1.bool will defaultly be updated content nor conditions
+//	 You should call UseBool if you have bool to use.
+//	2.float32 & float64 may be not inexact as conditions
 func (engine *Engine) Update(bean interface{}, condiBeans ...interface{}) (int64, error) {
 	session := engine.NewSession()
 	defer session.Close()
