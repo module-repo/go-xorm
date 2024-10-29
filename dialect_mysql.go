@@ -244,7 +244,8 @@ func (db *mysql) SqlType(c *core.Column) string {
 		res = core.Varchar
 		c.Length = 40
 	case core.Json:
-		res = core.Text
+		//res = core.Text
+		res = core.LongText
 	default:
 		res = t
 	}
